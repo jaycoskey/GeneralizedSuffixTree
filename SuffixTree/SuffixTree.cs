@@ -15,9 +15,9 @@ namespace TextAlgorithms
         public class SuffixTree
         {
             #region Types
-            private enum SuccessType
+            private enum ExtensionResult
             {
-                Failure, Success
+                NotDone, Done
             }
 
             #endregion // Types
@@ -35,7 +35,7 @@ namespace TextAlgorithms
                     Util.WriteLine(VerbosityLevel.Verbose, this.ToString());
                     Util.WriteLine(VerbosityLevel.Verbose, String.Format("Active: {0:s}", active.ToString(text)));
                     Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "Calling ExtendSuffixes() with lastCharIndex={0:d}", lastCharIndex));
+                        "Calling extendSuffixes() with lastCharIndex={0:d}", lastCharIndex));
                     extendSuffixes(ref active, lastCharIndex);
                 }
                 Util.Write(VerbosityLevel.Normal, this.ToString());
@@ -139,7 +139,7 @@ namespace TextAlgorithms
 
             #region Private methods
             // Rule 1: Try to find matching edge for the parent node.
-            private SuccessType extendSuffixByRuleOne(
+            private ExtensionResult extendSuffixByRuleOne(
                 ref Suffix active, int endIndex, ref Node parentNode)
             {
                 if (active.IsExplicit)
@@ -147,7 +147,12 @@ namespace TextAlgorithms
                     Edge edge = active.OriginNode.GetChildEdge(text[endIndex]);
                     if (edge != null && edge.IsSet())
                     {
-                        return SuccessType.Success;
+                        Debug.WriteLine(String.Format("  Rule #1 Extension complete via explicit suffix: {0:s}",
+                            active.ToString(text)));
+                        return ExtensionResult.Done;
+                    } else {
+                        Debug.WriteLine(String.Format("  Rule #1: Extension not complete via explicit suffix: {0:s}",
+                            active.ToString(text)));    
                     }
                 }
                 else    // active suffix is implicit
@@ -156,11 +161,15 @@ namespace TextAlgorithms
                     int span = active.EndIndex - active.BeginIndex;
                     if (text[edge.BeginIndex + span + 1] == text[endIndex])
                     {
-                        return SuccessType.Success;
+                        Debug.WriteLine(String.Format("  Rule #1 Extension complete via implicit suffix: {0:s}",
+                            active.ToString(text)));
+                        return ExtensionResult.Done;
                     }
+                    Debug.WriteLine(String.Format("  Rule #1: About to split edge #{0:d} via active suffix: {1:s}",
+                        edge.Id, active.ToString(text)));
                     parentNode = edge.Split(active);
                 }
-                return SuccessType.Failure;
+                return ExtensionResult.NotDone;
             }
 
             // Rule 2: Create a new edge and add it to the tree at the parent's position.
@@ -170,9 +179,13 @@ namespace TextAlgorithms
                 ref Suffix active, int endIndex, Node parentNode, ref Node prevParentNode)
             {
                 Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                    "Creating new edge with parentNode#={0:d}", parentNode.Id));
+                    "  Rule #2: Creating new edge with parentNode#={0:d}", parentNode.Id));
                 Edge newEdge = new Edge(this, parentNode, endIndex, this.text.Length - 1);
                 newEdge.Add();
+                Util.WriteLine(VerbosityLevel.Verbose, String.Format(
+                    "  Rule #2: Newly created edge (#{0:d}) has (parent,child) nodes = ({1:d}, {2:d})",
+                    newEdge.Id, newEdge.ParentNode.Id, newEdge.ChildNode.Id 
+                    ));
                 setSuffixLink(prevParentNode, parentNode);
                 prevParentNode = parentNode;
             }
@@ -186,7 +199,7 @@ namespace TextAlgorithms
                 {
                     parentNode = active.OriginNode;
 
-                    if (extendSuffixByRuleOne(ref active, beginIndex, ref parentNode) == SuccessType.Success)
+                    if (extendSuffixByRuleOne(ref active, beginIndex, ref parentNode) == ExtensionResult.Done)
                     {
                         break;
                     }
@@ -195,13 +208,13 @@ namespace TextAlgorithms
                 setSuffixLink(prevParentNode, parentNode);
                 active.EndIndex++;
                 Util.WriteLine(VerbosityLevel.Verbose,
-                    "  Calling Canonicalize() on the active suffix from ExtendSuffixes()");
+                    "  extendSuffixes(): Calling Canonicalize() on the active suffix");
                 active.Canonicalize();
             }
 
             private string getToStringEdgeBanner()
             {
-                string edgesBanner = "  ParentNode ChildNode  SufNodeId  BeginIndex EndIndex String"
+                string edgesBanner = "  ParentNode ChildNode  ChldLinkId BeginIndex EndIndex String"
                      + new String('.', Math.Max(0, text.Length - 6))
                      + "  Tree";
                 return edgesBanner;
@@ -246,14 +259,18 @@ namespace TextAlgorithms
                 IEnumerable<Node> leafNodes = Edges()
                     .Where(e => e.ChildNode == null || e.ChildNode.HasChildEdges() == false)
                     .Select(e => e.ChildNode);
-                sb.AppendLine(String.Format("  Count of leaf nodes = {0:d} ==> {1:s}",
+                sb.AppendLine(String.Format("  Count of leaf nodes = {0:d}{1:s}",
                     leafNodes.Count(),
-                    String.Join(", ", leafNodes.Select(n => "#" + n.Id.ToString()))
+                    leafNodes.Count() == 0
+                        ? " (None)"
+                        : " ==> " + String.Join(", ", leafNodes.Select(n => "#" + n.Id.ToString()))
                     ));
                 IEnumerable<Node> nodesWithSuffixLinks = Nodes().Where(n => n.SuffixNode != null);
-                sb.AppendLine(String.Format("  Count of nodes with suffix links = {0:d} ==> {1:s}",
+                sb.AppendLine(String.Format("  Count of nodes with suffix links = {0:d}{1:s}",
                     nodesWithSuffixLinks.Count(),
-                    String.Join(", ", nodesWithSuffixLinks.Select(n => "#" + n.Id.ToString()))
+                    nodesWithSuffixLinks.Count() == 0
+                        ? " (None)"
+                        : " ==> " + String.Join(", ", nodesWithSuffixLinks.Select(n => "#" + n.Id.ToString()))
                     ));
                 sb.Append(String.Format("  Edge count = {0:d}:", FullEdgeCount()));
                 if (Edges().Count() == 0)
@@ -278,7 +295,7 @@ namespace TextAlgorithms
                     active.OriginNode = active.OriginNode.SuffixNode;
                 }
                 Util.WriteLine(VerbosityLevel.Verbose,
-                    "  Calling Canonicalize() on the active suffix from moveToNextSuffix()");
+                    "  moveToNextSuffix(): Calling Canonicalize() on the active suffix");
                 active.Canonicalize();
             }
 

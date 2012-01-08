@@ -1,4 +1,4 @@
-﻿// Jay Coskey, January 2011.  Seattle, WA, USA.
+﻿// Jay Coskey, January 2012.  Seattle, WA, USA.
 
 using System;
 using System.Collections.Generic;
@@ -56,7 +56,7 @@ namespace TextAlgorithms
 
             public static void Write(VerbosityLevel v, string message)
             {
-                if (v >= SuffixTree.Verbosity)
+                if (SuffixTree.Verbosity >= v)
                 {
                     Debug.Write(Indentation + message);
                 }

@@ -42,6 +42,9 @@ namespace TextAlgorithms
             #region Public properties / methods
             public void Add()
             {
+                Util.WriteLine(VerbosityLevel.Verbose, String.Format(
+                    "    Adding edge to (node, char) = ({0:d}, '{1:c}').  New edge id=#{2:d}",
+                    ParentNode.Id, tree.Text[BeginIndex], this.Id));
                 ParentNode.AddChildEdge(tree.Text[BeginIndex], this);
             }
 

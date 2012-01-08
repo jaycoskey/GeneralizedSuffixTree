@@ -62,7 +62,7 @@ namespace TextAlgorithms
                 else
                 {
                     Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "    Suffix is explicit: Nothing to do. [{0:s}]",
+                        "    Canonicalize: Suffix is explicit: Nothing to do. [{0:s}]",
                         this.ToString(tree.Text)
                         ));
                 }
