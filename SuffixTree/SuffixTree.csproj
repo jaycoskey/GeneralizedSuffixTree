@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SuffixTree</RootNamespace>
-    <AssemblyName>ClassLibrary1</AssemblyName>
+    <AssemblyName>SuffixTree</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -41,11 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Edge.cs" />
-    <Compile Include="Node.cs" />
-    <Compile Include="Suffix.cs" />
+    <Compile Include="StEdge.cs" />
+    <Compile Include="StNode.cs" />
+    <Compile Include="StSuffix.cs" />
     <Compile Include="SuffixTree.cs" />
-    <Compile Include="Util.cs" />
+    <Compile Include="StUtil.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -31,7 +31,7 @@ namespace TextAlgorithms
                     string word = Console.ReadLine();
                     int wordLength = word.Length;
 
-                    SuffixTree.Verbosity = VerbosityLevel.Verbose;
+                    SuffixTree.Verbosity = StVerbosityLevel.Verbose;
                     SuffixTree tree = new SuffixTree(word);
                     Console.WriteLine(tree.ToString());
                     Console.WriteLine();
@@ -130,7 +130,8 @@ namespace TextAlgorithms
                         string textStr = tree.RangeString(tree.Text.Length - len, tree.Text.Length - 1);
                         string formatSpec = "{0," + tree.Text.Length.ToString() + ":s}";
                         string formatStr = String.Format(
-                            "SuffixTreeTest: About to compare \"{0:s}\" with \"{1:s}\"", formatSpec, formatSpec);                            
+                            "SuffixTreeTest: About to compare \"{0:s}\" with \"{1:s}\"",
+                            formatSpec, formatSpec);                            
                         Console.WriteLine(formatStr, pathStr, textStr);
                         if (pathStr != textStr)
                         {

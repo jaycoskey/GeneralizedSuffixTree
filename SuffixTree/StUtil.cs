@@ -12,6 +12,11 @@ namespace TextAlgorithms
 {
     namespace SuffixTree
     {
+        public enum ExtensionResult
+        {
+            NotDone, Done
+        }
+
         /// <summary>
         ///     Formerly passed to Util.Write() and Util.WriteLine().  Currently unused.
         /// </summary>
@@ -26,21 +31,28 @@ namespace TextAlgorithms
             Verbose = 16
         }
 
-        public class Util
+        public class StUtil
         {
+            #region Public fields
+            public static int TraceDepth = 0;
+            #endregion // Public fields
+
             #region Public static properties / methods
+            // For debugging.  Currently unused
             public static void Entering()
             {
-                Console.WriteLine(Indentation + String.Format("Entering {0:s}....", Util.GetCurrentMethodName(2)));
+                Console.WriteLine(Indentation + String.Format("Entering {0:s}....", StUtil.GetCurrentMethodName(2)));
                 TraceDepth++;
             }
 
+            // For debugging.  Currently unused
             public static void Exiting()
             {
                 TraceDepth--;
-                Console.WriteLine(Indentation + String.Format("Exiting {0:s}....", Util.GetCurrentMethodName(2)));
+                Console.WriteLine(Indentation + String.Format("Exiting {0:s}....", StUtil.GetCurrentMethodName(2)));
             }
 
+            // For debugging.  Currently unused
             public static string GetCurrentMethodName(int stackDepth = 1)
             {
                 StackTrace st = new StackTrace();
@@ -54,7 +66,7 @@ namespace TextAlgorithms
                 get { return new String(' ', 2 * TraceDepth); }
             }
 
-            public static void Write(VerbosityLevel v, string message)
+            public static void Write(StVerbosityLevel v, string message)
             {
                 if (SuffixTree.Verbosity >= v)
                 {
@@ -62,18 +74,14 @@ namespace TextAlgorithms
                 }
             }
 
-            public static void WriteLine(VerbosityLevel v, string message)
+            public static void WriteLine(StVerbosityLevel v, string message)
             {
-                Util.Write(v, message + Environment.NewLine);
+                StUtil.Write(v, message + Environment.NewLine);
             }
             #endregion Public static properties / methods
-
-            #region Public fields
-            public static int TraceDepth = 0;
-            #endregion // Public fields
         }
 
-        public enum VerbosityLevel
+        public enum StVerbosityLevel
         {
             Quiet, Normal, Verbose
         }

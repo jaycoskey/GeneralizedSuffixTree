@@ -7,10 +7,10 @@ namespace TextAlgorithms
 {
     namespace SuffixTree
     {
-        public class Suffix
+        public class StSuffix
         {
             #region Lifecycle
-            public Suffix(
+            public StSuffix(
                 SuffixTree tree,
                 Node originNode,
                 int beginIndex = 0,
@@ -23,7 +23,21 @@ namespace TextAlgorithms
             }
             #endregion // Lifecycle
 
-            #region Public fields / properties / methods
+            #region Public static methods
+            public static string ToSuffixString(int nodeId, int begin, int end, string word = "")
+            {
+                bool isExplicit = (end < begin);
+                return String.Format("(N{0:d}, ({1:s}-[{2:d}:{3:d}]{4:s})",
+                    nodeId,
+                    isExplicit ? "Exp" : "Imp",
+                    begin,
+                    end == SuffixTree.InfiniteIndex ? "Inf" : end.ToString(),
+                    (isExplicit || word == String.Empty) ? String.Empty : "=\"" + word.Substring(begin, end - begin + 1) + "\""
+                    );
+            }
+            #endregion // Public static methods
+
+            #region Public properties / methods
             // In canonical form, the OriginNodeId is the closest node to the end of the tree.
             public int BeginIndex
             {
@@ -35,14 +49,12 @@ namespace TextAlgorithms
             {
                 if (IsImplicit)
                 {
-                    Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "    Canonicalize: Suffix is implicit... [{0:s}]",
-                        this.ToString(tree.Text)
-                        ));
+                    int origNodeId, begin, end;
+                    origNodeId = this.OriginNode.Id;
+                    begin = this.beginIndex;
+                    end = this.endIndex;
+
                     Edge edge = OriginNode.GetChildEdge(tree.Text[BeginIndex]);
-                    Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "      Canonicalize(): Original edge = {0:s}",
-                        edge.ToString(tree.Text)));
                     while (edge.Span <= Span)
                     {
                         this.beginIndex += edge.Span + 1;
@@ -50,21 +62,16 @@ namespace TextAlgorithms
                         if (Span >= 0)
                         {
                             edge = edge.ChildNode.GetChildEdge(tree.Text[this.BeginIndex]);
-                            Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                                "      Canonicalize(): Updated edge = {0:s}",
-                                edge.ToString(tree.Text)));
                         }
                     }
-                    Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "    Canonicalize: Final suffix = {0:s}",
-                        this.ToString(tree.Text)));
-                }
-                else
-                {
-                    Util.WriteLine(VerbosityLevel.Verbose, String.Format(
-                        "    Canonicalize: Suffix is explicit: Nothing to do. [{0:s}]",
-                        this.ToString(tree.Text)
-                        ));
+
+                    if (origNodeId != OriginNode.Id || begin != beginIndex || end != endIndex)
+                    {
+                        StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                            "  Canonicalize: Active suffix changed from {0:s} to {1:s}",
+                            ToSuffixString(origNodeId, begin, end),
+                            ToSuffixString(OriginNode.Id, beginIndex, endIndex)));
+                    }
                 }
             }
 
@@ -76,7 +83,7 @@ namespace TextAlgorithms
 
             public bool IsFinite
             {
-                get { return endIndex > -1; }
+                get { return endIndex != SuffixTree.InfiniteIndex; }
             }
 
             public bool IsExplicit {
@@ -99,23 +106,12 @@ namespace TextAlgorithms
                 get { return this.EndIndex - this.BeginIndex; }
             }
 
-            public string ToString(string text, int maxLength = int.MaxValue)
+            public string ToString(string text = "")
             {
-                string result = String.Format(
-                    "Suffix is {0:s}, OriginNode#={1:d}, T[{2:d}:{3:s}]=\"{4:s}\"",
-                    IsExplicit ? "explicit" : "implicit",
-                    OriginNode.Id,
-                    BeginIndex,
-                    IsFinite ? this.EndIndex.ToString() : "Inf",
-                    (IsFinite && BeginIndex > EndIndex)
-                        ? String.Empty
-                        : text.Substring(BeginIndex, Math.Min(maxLength,
-                            IsFinite ? (EndIndex - BeginIndex + 1) : (tree.Text.Length - BeginIndex)
-                            ))
-                    );
+                string result = ToSuffixString(OriginNode.Id, beginIndex, endIndex, tree.Text);
                 return result;
             }
-            #endregion // Public fields / properties / methods
+            #endregion // Public properties / methods
 
             #region Private
             private int beginIndex;
