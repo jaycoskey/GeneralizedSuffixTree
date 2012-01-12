@@ -18,7 +18,7 @@ namespace TextAlgorithms
             public SuffixTree(string text)
             {
                 this.text = text;
-                this.root = new Node(this, null);
+                this.root = new StNode(this, null);
 
                 StUtil.WriteLine(StVerbosityLevel.Verbose, "Creating the active (longest proper) suffix pointer");
                 StSuffix active = new StSuffix(this, root, 0, InfiniteIndex);
@@ -26,8 +26,8 @@ namespace TextAlgorithms
                 {
                     StUtil.WriteLine(StVerbosityLevel.Verbose, this.ToString());
                     StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
-                        "Calling extendSuffixes() with endIndex = {0:d} and active suffix = {1:s}",
-                        endIndex, active.ToString()));
+                        "Calling extendSuffixes() with endIndex = {0:d} ('{1:c}') and active suffix = {2:s}",
+                        endIndex, text[endIndex], active.ToString()));
                     extendSuffixes(ref active, endIndex);
                 }
                 StUtil.Write(StVerbosityLevel.Normal, this.ToString());
@@ -45,11 +45,11 @@ namespace TextAlgorithms
             public IEnumerable<DepthTaggedEdge> DepthTaggedEdges()
             {
                 Stack<DepthTaggedEdge> dtEdges = new Stack<DepthTaggedEdge>();
-                foreach (Edge edge in root.ChildEdges()) { dtEdges.Push(new DepthTaggedEdge(edge, 1)); }
+                foreach (StEdge edge in root.ChildEdges()) { dtEdges.Push(new DepthTaggedEdge(edge, 1)); }
                 while (dtEdges.Count > 0)
                 {
                     DepthTaggedEdge dtEdge = dtEdges.Pop();
-                    foreach (Edge childEdge in dtEdge.Edge.ChildNode.ChildEdges())
+                    foreach (StEdge childEdge in dtEdge.Edge.ChildNode.ChildEdges())
                     {
                         dtEdges.Push(new DepthTaggedEdge(childEdge, dtEdge.Depth + 1));
                     }
@@ -58,14 +58,14 @@ namespace TextAlgorithms
                 yield break;
             }
 
-            public IEnumerable<Edge> Edges()
+            public IEnumerable<StEdge> Edges()
             {
-                Stack<Edge> edges = new Stack<Edge>();
-                foreach (Edge edge in root.ChildEdges()) { edges.Push(edge); }
+                Stack<StEdge> edges = new Stack<StEdge>();
+                foreach (StEdge edge in root.ChildEdges()) { edges.Push(edge); }
                 while (edges.Count > 0)
                 {
-                    Edge edge = edges.Pop();
-                    foreach (Edge childEdge in edge.ChildNode.ChildEdges())
+                    StEdge edge = edges.Pop();
+                    foreach (StEdge childEdge in edge.ChildNode.ChildEdges())
                     {
                         edges.Push(childEdge);
                     }
@@ -74,7 +74,7 @@ namespace TextAlgorithms
                 yield break;
             }
 
-            public string EdgeSubstring(Edge e)
+            public string EdgeSubstring(StEdge e)
             {
                 int index1 = e.BeginIndex;
                 int index2 = e.EndIndex;
@@ -86,15 +86,15 @@ namespace TextAlgorithms
                 return Edges().Count();
             }
 
-            public IEnumerable<Node> Nodes()
+            public IEnumerable<StNode> Nodes()
             {
                 yield return root;
-                Stack<Edge> edges = new Stack<Edge>();
-                foreach (Edge edge in root.ChildEdges()) { edges.Push(edge); }
+                Stack<StEdge> edges = new Stack<StEdge>();
+                foreach (StEdge edge in root.ChildEdges()) { edges.Push(edge); }
                 while (edges.Count > 0)
                 {
-                    Edge edge = edges.Pop();
-                    foreach (Edge childEdge in edge.ChildNode.ChildEdges())
+                    StEdge edge = edges.Pop();
+                    foreach (StEdge childEdge in edge.ChildNode.ChildEdges())
                     {
                         edges.Push(childEdge);
                     }
@@ -108,7 +108,7 @@ namespace TextAlgorithms
                 return Text.Substring(index1, index2 - index1 + 1);
             }
 
-            public Node Root
+            public StNode Root
             {
                 get { return root; }
             }
@@ -137,11 +137,11 @@ namespace TextAlgorithms
             #region Private methods
             // Rule 1: Try to find matching edge for the parent node.
             private ExtensionResult extendSuffixByRuleOne(
-                ref StSuffix active, int endIndex, ref Node parentNode)
+                ref StSuffix active, ref StNode parentNode, int endIndex)
             {
                 if (active.IsExplicit)
                 {
-                    Edge edge = active.OriginNode.GetChildEdge(text[endIndex]);
+                    StEdge edge = active.OriginNode.GetChildEdge(text[endIndex]);
                     if (edge != null && edge.IsSet())
                     {
                         return ExtensionResult.Done;
@@ -149,13 +149,16 @@ namespace TextAlgorithms
                 }
                 else    // active suffix is implicit
                 {
-                    Edge edge = active.OriginNode.GetChildEdge(text[active.BeginIndex]);
+                    StEdge edge = active.OriginNode.GetChildEdge(text[active.BeginIndex]);
                     int span = active.EndIndex - active.BeginIndex;
                     if (text[edge.BeginIndex + span + 1] == text[endIndex])
                     {
                         return ExtensionResult.Done;
                     }
-                    parentNode = edge.Split(active);
+                    StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                        "  Rule #1: About to split edge E{0:d} (\"{1:s}\") at suffix {2:s}",
+                        edge.Id, edge.GetText(), active.ToString()));
+                        parentNode = edge.Split(active);
                 }
                 return ExtensionResult.NotDone;
             }
@@ -164,9 +167,9 @@ namespace TextAlgorithms
             //     Part of this is inserting the new edge into the hash table,
             //     and creating a suffix link to the new node from the last one visited.
             private void extendSuffixByRuleTwo(
-                ref StSuffix active, int endIndex, Node parentNode, ref Node prevParentNode)
+                ref StSuffix active, StNode parentNode, ref StNode prevParentNode,  int endIndex)
             {
-                Edge newEdge = new Edge(this, parentNode, endIndex, this.text.Length - 1);
+                StEdge newEdge = new StEdge(this, parentNode, endIndex, this.text.Length - 1);
                 newEdge.Add();
                 StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
                     "  Rule #2: New edge E{0:d} (\"{1:s}\") connects N{2:d} (old parent) to N{3:d} (new child)",
@@ -181,18 +184,17 @@ namespace TextAlgorithms
 
             private void extendSuffixes(ref StSuffix active, int beginIndex)
             {
-                Node parentNode;
-                Node prevParentNode = null;
+                StNode parentNode;
+                StNode prevParentNode = null;
 
                 for (   ; ; incrSuffix(ref active))
                 {
                     parentNode = active.OriginNode;
-
-                    if (extendSuffixByRuleOne(ref active, beginIndex, ref parentNode) == ExtensionResult.Done)
+                    if (extendSuffixByRuleOne(ref active, ref parentNode,  beginIndex) == ExtensionResult.Done)
                     {
                         break;
                     }
-                    extendSuffixByRuleTwo(ref active, beginIndex, parentNode, ref prevParentNode);
+                    extendSuffixByRuleTwo(ref active, parentNode, ref prevParentNode, beginIndex);
                 }
                 setSuffixLink(prevParentNode, parentNode);
                 active.EndIndex++;
@@ -216,7 +218,7 @@ namespace TextAlgorithms
                 sb.AppendLine(edgesBanner);
                 foreach (DepthTaggedEdge dtEdge in DepthTaggedEdges())
                 {
-                    Edge edge = dtEdge.Edge;
+                    StEdge edge = dtEdge.Edge;
                     string formatStr = "  {0,-11:d}{1,-11:d}{2,-11:s}{3,-11:d}{4,-9:d}{5,-"
                         + text.Length.ToString()
                         + ":s}";
@@ -243,7 +245,7 @@ namespace TextAlgorithms
                 sb.AppendLine();
                 sb.AppendLine(String.Format("  Currently constructed SuffixTree for \"{0:s}\" (length={1:d})",
                         text, text.Length));
-                IEnumerable<Node> leafNodes = Edges()
+                IEnumerable<StNode> leafNodes = Edges()
                     .Where(e => e.ChildNode == null || e.ChildNode.HasChildEdges() == false)
                     .Select(e => e.ChildNode);
                 sb.AppendLine(String.Format("  Count  of  leaf  nodes = {0:d}{1:s}",
@@ -252,7 +254,7 @@ namespace TextAlgorithms
                         ? " (None)"
                         : ": " + String.Join(", ", leafNodes.Select(n => /* "#" + */ n.Id.ToString()))
                     ));
-                IEnumerable<Node> nodesWithSuffixLinks = Nodes().Where(n => n.SuffixNode != null);
+                IEnumerable<StNode> nodesWithSuffixLinks = Nodes().Where(n => n.SuffixNode != null);
                 sb.AppendLine(String.Format("  Count of linking nodes = {0:d}{1:s}",
                     nodesWithSuffixLinks.Count(),
                     nodesWithSuffixLinks.Count() == 0
@@ -289,19 +291,27 @@ namespace TextAlgorithms
                     || end != active.EndIndex)
                 {
                     StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
-                        "  Canonicalize: Active suffix changed from {0:s} to {1:s}",
+                        "  incrSuffix: Active suffix changed from {0:s} to {1:s}",
                         StSuffix.ToSuffixString(origNodeId, begin, end),
                         StSuffix.ToSuffixString(active.OriginNode.Id, active.BeginIndex, active.EndIndex)));
                 }
             }
 
-            private void setSuffixLink(Node node, Node suffixNode)
+            private void setSuffixLink(StNode node, StNode suffixNode)
             {
                 if ((node != null) && (node != root))
                 {
-                    StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
-                        "  New suffix link from N{0:d} to N{1:d}",
-                        node.Id, suffixNode.Id));
+                    if (node.SuffixNode == null)
+                    {
+                        StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                            "  New suffix link from N{0:d} to N{1:d}",
+                            node.Id, suffixNode.Id));
+                    } else {
+                        // Note: The following statement should never be executed.
+                        StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                            "  Overwriting old suffix link (N{0:d} to N{1:d}) with new one (N{0:d} to N{2:d})",
+                            node.Id, node.SuffixNode.Id, suffixNode.Id));
+                    }
                     node.SuffixNode = suffixNode;
                 }
             }
@@ -309,7 +319,7 @@ namespace TextAlgorithms
 
             #region Private fields
             private string text;
-            private Node root;
+            private StNode root;
             #endregion // Private fields
         }
     }

@@ -23,32 +23,74 @@ namespace TextAlgorithms
                 ///     Run tests tagged with a particular attribute, and invoke them using reflection.
                 ///     Currently, only tests from this class are invoked. 
                 /// </summary>
-                /// <param name="args"></param>
                 public static void Main(string[] args)
                 {
-                    Console.Write("Enter input string with unique final character: ");
-                    Console.Out.Flush();
-                    string word = Console.ReadLine();
-                    int wordLength = word.Length;
+                    bool isDone = false;
+                    while (!isDone)
+                    {
+                        Console.Write("Enter input string with unique final character: ");
+                        Console.Out.Flush();
+                        string word = Console.ReadLine();
 
-                    SuffixTree.Verbosity = StVerbosityLevel.Verbose;
-                    SuffixTree tree = new SuffixTree(word);
-                    Console.WriteLine(tree.ToString());
-                    Console.WriteLine();
-                    Console.Write("Press 'Enter' to proceed with validation: ");
-                    Console.Out.Flush();
-                    Console.ReadLine();
+                        SuffixTree.Verbosity = StVerbosityLevel.Verbose;
+                        SuffixTree tree = null;
+                        bool isCreationSuccessful = true;
+                        try
+                        {
+                            tree = new SuffixTree(word);
+                            Console.WriteLine("Final suffix tree:");
+                            Console.WriteLine(tree.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            isCreationSuccessful = false;
+                            Console.WriteLine();
+                            Console.WriteLine(String.Format(
+                                "Suffix tree creation: Caught exception: {0;s}", ex.Message));
+                        }
+                        Console.WriteLine();
+                        if (isCreationSuccessful)
+                        {
+                            Console.Write("Press 'Enter' to proceed with validation: ");
+                            Console.Out.Flush();
+                            Console.ReadLine();
+                            try
+                            {
+                                runTests(tree);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine();
+                                Console.WriteLine(String.Format(
+                                    "Suffix tree testing: Caught exception: {0;s}", ex.Message));
+                            }
+                        }
+                        Console.Write("Continue (y or n)? ");
+                        Console.Out.Flush();
+                        string continueStr = Console.ReadLine();
+                        if (continueStr.ToLower()[0] != 'y')
+                        {
+                            isDone = true;
+                        }
+                    }
 
+                }
+                #endregion Public static methods
+
+                #region Private static methods
+                private static void runTests(SuffixTree tree)
+                {
                     var testMethods = // MethodBase.GetCurrentMethod().DeclaringType
                         (typeof(SuffixTreeTest)).GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
                         .Where(m => m.GetCustomAttributes(typeof(SuffixTreeTestMethodAttribute), false).Length > 0)
                         .OrderBy(m => m.Name);
                     int numTests = 0;
                     int numFailedTests = 0;
-                    foreach (MethodInfo mi in testMethods) {
+                    foreach (MethodInfo mi in testMethods)
+                    {
                         DescriptionAttribute descriptor = (DescriptionAttribute)
                             mi.GetCustomAttributes(typeof(DescriptionAttribute), false).FirstOrDefault();
-                        bool didPassTest = (bool) mi.Invoke(null, new Object[1] { tree });
+                        bool didPassTest = (bool)mi.Invoke(null, new Object[1] { tree });
                         numTests++;
                         if (!didPassTest)
                         {
@@ -58,16 +100,10 @@ namespace TextAlgorithms
                     }
                     Console.WriteLine(String.Format("Passed {0:d} of {1:d} tests",
                         numTests - numFailedTests, numTests));
-                    Console.Write("Press 'Enter' to exit program.");
-                    Console.Out.Flush();
-                    Console.ReadLine();
                 }
-                #endregion Public static methods
 
-                #region Private static methods
                 [SuffixTreeTestMethodAttribute]
-                [Description("Ensure that the suffix tree paths from root to leaf nodes are suffixes, "
-                    + "and that the correct number are present.")]
+                [Description("Ensure that the suffix tree paths from root to leaf nodes are indeed suffixes.")]
                 private static bool validateSuffixStrings(SuffixTree tree)
                 {
                     List<int> failedLeafNodeIds;
@@ -88,13 +124,13 @@ namespace TextAlgorithms
                     SuffixTree tree,
                     out List<int> failedLeafNodeIds)
                 {
-                    Stack<Tuple<Edge, string>> edgeStrings = new Stack<Tuple<Edge, string>>();
+                    Stack<Tuple<StEdge, string>> edgeStrings = new Stack<Tuple<StEdge, string>>();
 
                     // Step 1: Populate edgeStrings with data from child edges of the root node.
                     //         Track any leaves that are immedage children of the root node.
-                    List<Tuple<Edge, string>> leafEdgeStrings = new List<Tuple<Edge, string>>();
-                    foreach (Edge edge in tree.Root.ChildEdges()) {
-                        Tuple<Edge, string> edgeString = new Tuple<Edge, string>(edge, tree.EdgeSubstring(edge));
+                    List<Tuple<StEdge, string>> leafEdgeStrings = new List<Tuple<StEdge, string>>();
+                    foreach (StEdge edge in tree.Root.ChildEdges()) {
+                        Tuple<StEdge, string> edgeString = new Tuple<StEdge, string>(edge, tree.EdgeSubstring(edge));
                         edgeStrings.Push(edgeString);
                         if (!edge.ChildNode.HasChildEdges())
                         {
@@ -106,10 +142,10 @@ namespace TextAlgorithms
                     // Step 2: Walk the tree, adding the remaining edges.  Keep track of leaf edges.
                     while (edgeStrings.Count > 0)
                     {
-                        Tuple<Edge, string> edgeString = edgeStrings.Pop();
-                        foreach (Edge childEdge in edgeString.Item1.ChildNode.ChildEdges())
+                        Tuple<StEdge, string> edgeString = edgeStrings.Pop();
+                        foreach (StEdge childEdge in edgeString.Item1.ChildNode.ChildEdges())
                         {
-                            Tuple<Edge, string> newEdgeString = new Tuple<Edge, string>(
+                            Tuple<StEdge, string> newEdgeString = new Tuple<StEdge, string>(
                                 childEdge, edgeString.Item2 + tree.EdgeSubstring(childEdge));
                             edgeStrings.Push(newEdgeString);
                             if (!childEdge.ChildNode.HasChildEdges())

@@ -6,32 +6,32 @@ namespace TextAlgorithms
 {
     namespace SuffixTree
     {
-        public class Node
+        public class StNode
         {
             #region Lifecycle
-            public Node(SuffixTree tree, Node suffixNode)
+            public StNode(SuffixTree tree, StNode suffixNode)
             {
                 this.tree = tree;
                 this.id = tree.NodeCount++;
-                this.childEdges = new Dictionary<char, Edge>();
+                this.childEdges = new Dictionary<char, StEdge>();
                 this.suffixNode = suffixNode;
             }
             #endregion // Lifecycle
 
             #region Public fields / properties / methods
-            public void AddChildEdge(char c, Edge edge)
+            public void AddChildEdge(char c, StEdge edge)
             {
                 childEdges.Add(c, edge);
             }
 
-            public IEnumerable<Edge> ChildEdges()
+            public IEnumerable<StEdge> ChildEdges()
             {
                 return childEdges.Values;
             }
 
-            public Edge GetChildEdge(char c)
+            public StEdge GetChildEdge(char c)
             {
-                Edge childEdge = null;
+                StEdge childEdge = null;
                 childEdges.TryGetValue(c, out childEdge);
                 return childEdge;
             }
@@ -52,7 +52,7 @@ namespace TextAlgorithms
                 childEdges.Remove(c);
             }
 
-            public Node SuffixNode
+            public StNode SuffixNode
             {
                 get { return suffixNode; }
                 set { suffixNode = value; }
@@ -62,9 +62,9 @@ namespace TextAlgorithms
             #endregion // Public fields / properties / methods
 
             #region Private
-            private Dictionary<char, Edge> childEdges;
+            private Dictionary<char, StEdge> childEdges;
             private int id;
-            private Node suffixNode;
+            private StNode suffixNode;
             private SuffixTree tree;
             #endregion // Private
         }

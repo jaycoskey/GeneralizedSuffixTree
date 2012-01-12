@@ -12,28 +12,28 @@ namespace TextAlgorithms
     {
         public class DepthTaggedEdge
         {
-            public Edge Edge;
+            public StEdge Edge;
             public int Depth;
-            public DepthTaggedEdge(Edge e, int d)
+            public DepthTaggedEdge(StEdge e, int d)
             {
                 Edge = e;
                 Depth = d;
             }
         }
 
-        public class Edge
+        public class StEdge
         {
             #region Lifecycle
-            public Edge(
+            public StEdge(
                 SuffixTree tree,
-                Node parentNode,
+                StNode parentNode,
                 int indexOfFirstChar,
                 int indexOfLastChar)
             {
-                this.id = Edge.nextId++;
+                this.id = StEdge.nextId++;
                 this.tree = tree;
                 this.ParentNode = parentNode;
-                this.ChildNode = new Node(tree, null);
+                this.ChildNode = new StNode(tree, null);
                 this.BeginIndex = indexOfFirstChar;
                 this.EndIndex = indexOfLastChar;
             }
@@ -42,8 +42,8 @@ namespace TextAlgorithms
             #region Public fields
             public int BeginIndex;
             public int EndIndex;
-            public Node ChildNode;
-            public Node ParentNode;
+            public StNode ChildNode;
+            public StNode ParentNode;
             #endregion // Public fields
 
             #region Public properties / methods
@@ -86,10 +86,10 @@ namespace TextAlgorithms
 
             public int Span { get { return (this.EndIndex - this.BeginIndex); } }
 
-            public Node Split(StSuffix s)
+            public StNode Split(StSuffix s)
             {
                 Remove();
-                Edge newEdge = new Edge(tree, s.OriginNode, BeginIndex, BeginIndex + s.Span);
+                StEdge newEdge = new StEdge(tree, s.OriginNode, BeginIndex, BeginIndex + s.Span);
                 newEdge.Add();
                 newEdge.ChildNode.SuffixNode = s.OriginNode;
                 BeginIndex += s.Span + 1;

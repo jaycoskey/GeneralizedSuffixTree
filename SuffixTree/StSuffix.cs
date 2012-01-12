@@ -2,6 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
+
+using System.Diagnostics;
 
 namespace TextAlgorithms
 {
@@ -12,7 +15,7 @@ namespace TextAlgorithms
             #region Lifecycle
             public StSuffix(
                 SuffixTree tree,
-                Node originNode,
+                StNode originNode,
                 int beginIndex = 0,
                 int endIndex = int.MaxValue)
             {
@@ -49,28 +52,36 @@ namespace TextAlgorithms
             {
                 if (IsImplicit)
                 {
+                    bool haveValuesChanged = false;
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("  Canonicalize: Entering");
+                    // sb.AppendLine(tree.ToString());
+
                     int origNodeId, begin, end;
                     origNodeId = this.OriginNode.Id;
                     begin = this.beginIndex;
                     end = this.endIndex;
 
-                    Edge edge = OriginNode.GetChildEdge(tree.Text[BeginIndex]);
+                    StEdge edge = OriginNode.GetChildEdge(tree.Text[BeginIndex]);
                     while (edge.Span <= Span)
                     {
+                        sb.Append(String.Format(
+                            "    Canonicalize: Active suffix changed from {0:s}",
+                            ToSuffixString(origNodeId, begin, end)));
                         this.beginIndex += edge.Span + 1;
                         this.OriginNode = edge.ChildNode;
+                        haveValuesChanged = true;
+                        sb.AppendLine(String.Format(" to {0:s}",
+                                ToSuffixString(OriginNode.Id, beginIndex, endIndex)));
                         if (Span >= 0)
                         {
-                            edge = edge.ChildNode.GetChildEdge(tree.Text[this.BeginIndex]);
+                            edge = edge.ChildNode.GetChildEdge(tree.Text[BeginIndex]);
                         }
                     }
-
-                    if (origNodeId != OriginNode.Id || begin != beginIndex || end != endIndex)
+                    sb.AppendLine("  Canonicalize: Exiting");
+                    if (haveValuesChanged)
                     {
-                        StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
-                            "  Canonicalize: Active suffix changed from {0:s} to {1:s}",
-                            ToSuffixString(origNodeId, begin, end),
-                            ToSuffixString(OriginNode.Id, beginIndex, endIndex)));
+                        StUtil.Write(StVerbosityLevel.Verbose, sb.ToString());
                     }
                 }
             }
@@ -95,7 +106,7 @@ namespace TextAlgorithms
                 get { return (Span >= 0); }
             }
 
-            public Node OriginNode
+            public StNode OriginNode
             {
                 get;
                 set;
@@ -106,7 +117,7 @@ namespace TextAlgorithms
                 get { return this.EndIndex - this.BeginIndex; }
             }
 
-            public string ToString(string text = "")
+            public override string ToString()
             {
                 string result = ToSuffixString(OriginNode.Id, beginIndex, endIndex, tree.Text);
                 return result;
