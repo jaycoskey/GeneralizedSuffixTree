@@ -106,19 +106,18 @@ namespace TextAlgorithms
 
             public string ToString(string text = "")
             {
-                string result = String.Format(
-                    "Edge{0:d} = (N{1:d}, N{2:d}) = "
-                        + "T[{3:d}:{4:s}]"
-                        + "{5:s}",
-                    this.Id,
-                    this.ParentNode.Id,
-                    this.ChildNode.Id,
-                    this.BeginIndex,
-                    (this.EndIndex == SuffixTree.InfiniteIndex) ? "Inf" : this.EndIndex.ToString(),
-                    (text == null || text == String.Empty)
-                    ? String.Empty
-                    : text.Substring(this.BeginIndex, this.Span + 1));
-                return result;
+                StringBuilder sb = new StringBuilder();
+                sb.Append(String.Format("E{0:d} = (N{1:d}, N{2:d}) = T[{3:d}:{4:s}]",
+                     Id,
+                     ParentNode.Id,
+                     ChildNode.Id,
+                     BeginIndex,
+                     (EndIndex == SuffixTree.InfiniteIndex) ? "Inf" : EndIndex.ToString()
+                    ));
+                if (text == null || text == String.Empty) {
+                    sb.Append(" = \"" + text.Substring(BeginIndex, Span + 1) + "\"");
+                }
+                return sb.ToString();
             }
             #endregion // Public properties / methods
 

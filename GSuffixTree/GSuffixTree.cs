@@ -291,7 +291,7 @@ namespace TextAlgorithms
                 }
                 else
                 {
-                    active.OriginNode = active.OriginNode.SuffixNode;   // TODO: BUGFIX: SuffixNode can be null
+                    active.OriginNode = active.OriginNode.SuffixNode;
                 }
                 active.Canonicalize();
 

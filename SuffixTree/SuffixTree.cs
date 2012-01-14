@@ -307,10 +307,15 @@ namespace TextAlgorithms
                             "  New suffix link from N{0:d} to N{1:d}",
                             node.Id, suffixNode.Id));
                     } else {
-                        // Note: The following statement should never be executed.
-                        StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
-                            "  Overwriting old suffix link (N{0:d} to N{1:d}) with new one (N{0:d} to N{2:d})",
-                            node.Id, node.SuffixNode.Id, suffixNode.Id));
+                        if (node.SuffixNode.Id == suffixNode.Id) {
+                            StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                                "  Suffix link (N{0:d} to N{1:d}) retaining same value",
+                                node.Id, node.SuffixNode.Id));
+                        } else {
+                            StUtil.WriteLine(StVerbosityLevel.Verbose, String.Format(
+                                "  Suffix link (N{0:d} to N{1:d}) set to new value (N{0:d} to N{2:d})",
+                                node.Id, node.SuffixNode.Id, suffixNode.Id));
+                        }
                     }
                     node.SuffixNode = suffixNode;
                 }

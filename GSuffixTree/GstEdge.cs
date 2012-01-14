@@ -100,7 +100,6 @@ namespace TextAlgorithms
             public bool HasWordNum(int wordNum)
             {
                 return beginIndexes.ContainsKey(wordNum);
-                // TODO: Assert that endIndexes yields same.
             }
 
             public int Id
@@ -167,7 +166,14 @@ namespace TextAlgorithms
             {
                 // Create new edge
                 int wordNum = s.WordNum;
-                GstEdge newEdge = new GstEdge(tree, s.OriginNode, wordNum, GetBeginIndex(wordNum), GetBeginIndex(wordNum) + s.Span);
+                GstEdge newEdge;
+                if (this.HasWordNum(s.WordNum))
+                {
+                     newEdge = new GstEdge(tree, s.OriginNode, wordNum, GetBeginIndex(wordNum), GetBeginIndex(wordNum) + s.Span);
+                } else
+                {
+                    newEdge = new GstEdge(tree, s.OriginNode, wordNum, s.BeginIndex, s.EndIndex);
+                }
                 foreach (int n in beginIndexes.Keys) { newEdge.SetBeginIndex(n, beginIndexes[n]); }
                 foreach (int n in endIndexes.Keys) { newEdge.SetEndIndex(n, beginIndexes[n] + s.Span); }
                 newEdge.ChildNode.SuffixNode = s.OriginNode;
