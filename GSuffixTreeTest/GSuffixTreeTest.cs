@@ -27,19 +27,34 @@ namespace TextAlgorithms
                     bool isDone = false;
                     while (!isDone)
                     {
-                        Console.Write("Enter word #1, with a unique final character: ");
-                        Console.Out.Flush();
-                        string word1 = Console.ReadLine();
-
-                        Console.Write("Enter word #2, with a unique final character: ");
-                        Console.Out.Flush();
-                        string word2 = Console.ReadLine();
+                        Console.WriteLine("Note: Each word entered must end with a character "
+                            + "that does not appear earlier in the word.");
+                        List<string> words = new List<string>();
+                        for (int wordNum = 0; ; wordNum++)
+                        {
+                            Console.Write(String.Format("Enter word #{0:d}{1:s}: ",
+                                wordNum,
+                                wordNum == 0
+                                    ? " (with a unique terminating character) "
+                                    : " (enter an empty string to end input)  "
+                                ));
+                            Console.Out.Flush();
+                            string word = Console.ReadLine();
+                            if (word == null || word.Length == 0)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                words.Add(word);
+                            }
+                        }
 
                         GSuffixTree.Verbosity = GstVerbosityLevel.Verbose;
-                        string[] words = new string[] { word1, word2 };
                         GSuffixTree tree = null;
                         bool isCreationSuccessful = false;
-                        try {
+                        try
+                        {
                             tree = new GSuffixTree(words, true);
                             Console.WriteLine("Final suffix tree:");
                             Console.WriteLine(tree.ToString());
@@ -75,7 +90,7 @@ namespace TextAlgorithms
                         Console.Write("Continue (y or n)? ");
                         Console.Out.Flush();
                         string continueStr = Console.ReadLine();
-                        if (continueStr.Length > 0 && continueStr.ToLower()[0] != 'y')
+                        if (continueStr == null || continueStr.Length > 0 && continueStr.ToLower()[0] != 'y')
                         {
                             isDone = true;
                         }
@@ -110,7 +125,7 @@ namespace TextAlgorithms
 
                 [SuffixTreeTestMethodAttribute]
                 [Description("Ensure that the suffix tree paths from root to leaf nodes are suffixes")]
-                private static bool validateSuffixStrings(TextAlgorithms.SuffixTree.GSuffixTree tree)
+                private static bool validateSuffixStrings(GSuffixTree tree)
                 {
                     List<int> failedLeafNodeIds;
                     bool result = validateSuffixStrings(tree, out failedLeafNodeIds);

@@ -82,8 +82,8 @@ namespace TextAlgorithms
                 {
                     GstUtil.WriteLine(GstVerbosityLevel.Verbose, this.ToString());
                     GstUtil.WriteLine(GstVerbosityLevel.Verbose, String.Format(
-                        "Calling extendSuffixes() with endIndex = {0:d} ('{1:c}') and active suffix = {2:s}",
-                        endIndex, GetWordChar(wordNum, endIndex), active.ToString()));
+                        "Calling extendSuffixes() for word #{0:d}, with endIndex = {1:d} ('{2:c}') and active suffix = {3:s}",
+                        wordNum, endIndex, GetWordChar(wordNum, endIndex), active.ToString()));
                     extendSuffixes(ref active, endIndex, wordNum);
                 }
                 if (doConsoleVerbose)
@@ -191,6 +191,37 @@ namespace TextAlgorithms
                 return sb.ToString();
             }
 
+            private static bool ValidateConsistentEdgeText(GSuffixTree tree, bool doConsoleVerbose = false)
+            {
+                foreach (GstEdge edge in tree.Edges())
+                {
+                    var wordNums = edge.WordNums();
+                    if (wordNums.Count() > 1)
+                    {
+                        int firstWordNum = wordNums.First();
+                        string firstText = edge.GetText(firstWordNum);
+                        foreach (int wordNum in edge.WordNums().Skip(1))
+                        {
+                            if (edge.GetText(wordNum) != firstText)
+                            {
+                                if (doConsoleVerbose)
+                                {
+                                    Debug.WriteLine(String.Format(
+                                        "ERROR: Mismatch on edge #{0:d}: "
+                                        + "Text[{1:d}] = \"{2:s}\", but "
+                                        + "Text[{3:d}] = \"{4:s}\"",
+                                        edge.Id,
+                                        firstWordNum, firstText,
+                                        wordNum, edge.GetText(wordNum)));
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
             public int WordCount
             {
                 get { return wordDict.Count(); }
@@ -258,7 +289,7 @@ namespace TextAlgorithms
                 prevParentNode = parentNode;
             }
 
-            private void extendSuffixes(ref GstSuffix active, int beginIndex, int wordNum)
+            private void extendSuffixes(ref GstSuffix active, int endIndex, int wordNum)
             {
                 GstNode parentNode;
                 GstNode prevParentNode = null;
@@ -266,12 +297,13 @@ namespace TextAlgorithms
                 for (   ; ; incrSuffix(ref active, wordNum))
                 {
                     parentNode = active.OriginNode;
-                    if (extendSuffixByRuleOne(ref active, ref parentNode, beginIndex, wordNum)
+                    if (extendSuffixByRuleOne(ref active, ref parentNode, endIndex, wordNum)
                         == ExtensionResult.Done)
                     {
                         break;
                     }
-                    extendSuffixByRuleTwo(ref active, parentNode, ref prevParentNode, beginIndex, wordNum);
+                    extendSuffixByRuleTwo(ref active, parentNode, ref prevParentNode, endIndex, wordNum);
+                    Debug.Assert(ValidateConsistentEdgeText(this, true));
                 }
                 setSuffixLink(prevParentNode, parentNode);
                 active.EndIndex++;
@@ -361,11 +393,11 @@ namespace TextAlgorithms
                     && ((nextEdge = curNode.GetChildEdge(GetWordChar(wordNum, endIndex))) != null)
                     )
                 {
-                    int strLen = nextEdge.GetEndIndex(0) - nextEdge.GetBeginIndex(0) + 1;
+                    int strLen = nextEdge.Span(0) + 1;
                     // edgeStr = String in next edge
-                    string edgeStr = wordDict[0].Substring(nextEdge.GetBeginIndex(0), strLen);
+                    string edgeStr = nextEdge.GetText();
                     // wordStr = next segment of upcoming word that corresponds to edgeStr
-                    string wordStr = wordDict[wordNum].Substring(0, Math.Min(strLen, wordDict[wordNum].Length));
+                    string wordStr = wordDict[wordNum].Substring(endIndex, Math.Min(strLen, wordDict[wordNum].Length - endIndex));
 
                     bool foundMismatch = false;
                     int numCharsMatched = 0;
@@ -375,7 +407,7 @@ namespace TextAlgorithms
                         if (edgeStr[i] == wordStr[i]) { numCharsMatched++; }
                         else { foundMismatch = true; break; }
                     }
-                    endIndex += numCharsMatched;
+                    
                     if (foundMismatch)
                     {
                         GstUtil.WriteLine(GstVerbosityLevel.Verbose, String.Format(
@@ -390,12 +422,14 @@ namespace TextAlgorithms
                         nextEdge.SetBeginIndex(wordNum, endIndex);
                         nextEdge.SetEndIndex(wordNum, endIndex + strLen - 1);
                         GstUtil.WriteLine(GstVerbosityLevel.Verbose, String.Format(
-                            "  skipDuplicateInitialSubstring: Word #{0:d} covers existing edge #{1:d} (\"{2:s}\")",
+                            "  skipDuplicateInitialSubstring: Word #{0:d} covers existing edge #{1:d} ({2:s})",
                             wordNum, nextEdge.Id, nextEdge.ToString(wordNum)));
                         active.OriginNode = nextEdge.ChildNode;
                         active.BeginIndex += numCharsMatched;
                         active.EndIndex = active.BeginIndex;
                     }
+                    endIndex += numCharsMatched;
+
                     // Set up next iteration of loop
                     curEdge = nextEdge;
                     curNode = curEdge.ChildNode;

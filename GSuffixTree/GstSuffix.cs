@@ -66,12 +66,12 @@ namespace TextAlgorithms
                     end = this.endIndex;
 
                     GstEdge edge = OriginNode.GetChildEdge(tree.GetWordChar(WordNum, BeginIndex));
-                    while (edge.Span <= Span)
+                    while (edge.Span() <= Span)
                     {
                         sb.Append(String.Format(
                             "    Canonicalize: Active suffix changed from {0:s}",
                             ToSuffixString(origNodeId, begin, end)));
-                        this.beginIndex += edge.Span + 1;
+                        this.beginIndex += edge.Span() + 1;
                         this.OriginNode = edge.ChildNode;
                         haveValuesChanged = true;
                         sb.AppendLine(String.Format(" to {0:s}",

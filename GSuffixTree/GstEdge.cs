@@ -83,12 +83,12 @@ namespace TextAlgorithms
                 return firstChar;
             }
 
-            public string GetText()
+            public string GetText(int wordNum = -1)
             {
-                int extantWordNum = GetExtantWordNum();
-                int beginIndex = GetBeginIndex(extantWordNum);
-                int endIndex = RealEndIndex(extantWordNum);
-                string result = tree.GetWord(extantWordNum).Substring(beginIndex, endIndex - beginIndex + 1);
+                if (wordNum == -1) { wordNum = GetExtantWordNum(); }
+                int beginIndex = GetBeginIndex(wordNum);
+                int endIndex = RealEndIndex(wordNum);
+                string result = tree.GetWord(wordNum).Substring(beginIndex, endIndex - beginIndex + 1);
                 return result;
             }
 
@@ -155,11 +155,9 @@ namespace TextAlgorithms
                 endIndexes[wordNum] = val;
             }
 
-            public int Span {
-                get {
-                    int extantWordNum = GetExtantWordNum();
-                    return (this.GetEndIndex(extantWordNum) - this.GetBeginIndex(extantWordNum));
-                } 
+            public int Span(int wordNum = -1) {
+                if (wordNum == -1) { wordNum = GetExtantWordNum(); }
+                return (this.GetEndIndex(wordNum) - this.GetBeginIndex(wordNum));
             }
 
             public GstNode Split(GstSuffix s)
@@ -203,9 +201,9 @@ namespace TextAlgorithms
                 if (wordNum >= 0) {
                     sb.Append(String.Format(" = T[{0:d}:{1:d}]",
                         GetBeginIndex(wordNum), RealEndIndex(wordNum)));
-                    if (Span >= 0)
+                    if (Span() >= 0)
                     {
-                        sb.Append(" = \"" + tree.GetWord(wordNum).Substring(GetBeginIndex(wordNum), Span + 1) + "\"");
+                        sb.Append(" = \"" + tree.GetWord(wordNum).Substring(GetBeginIndex(wordNum), Span() + 1) + "\"");
                     }
                 }
                 return sb.ToString();

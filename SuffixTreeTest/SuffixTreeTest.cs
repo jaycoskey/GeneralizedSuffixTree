@@ -68,7 +68,7 @@ namespace TextAlgorithms
                         Console.Write("Continue (y or n)? ");
                         Console.Out.Flush();
                         string continueStr = Console.ReadLine();
-                        if (continueStr.Length > 0 && continueStr.ToLower()[0] != 'y')
+                        if (continueStr == null || continueStr.Length > 0 && continueStr.ToLower()[0] != 'y')
                         {
                             isDone = true;
                         }

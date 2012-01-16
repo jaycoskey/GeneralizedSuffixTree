@@ -182,7 +182,7 @@ namespace TextAlgorithms
                 prevParentNode = parentNode;
             }
 
-            private void extendSuffixes(ref StSuffix active, int beginIndex)
+            private void extendSuffixes(ref StSuffix active, int endIndex)
             {
                 StNode parentNode;
                 StNode prevParentNode = null;
@@ -190,11 +190,11 @@ namespace TextAlgorithms
                 for (   ; ; incrSuffix(ref active))
                 {
                     parentNode = active.OriginNode;
-                    if (extendSuffixByRuleOne(ref active, ref parentNode,  beginIndex) == ExtensionResult.Done)
+                    if (extendSuffixByRuleOne(ref active, ref parentNode,  endIndex) == ExtensionResult.Done)
                     {
                         break;
                     }
-                    extendSuffixByRuleTwo(ref active, parentNode, ref prevParentNode, beginIndex);
+                    extendSuffixByRuleTwo(ref active, parentNode, ref prevParentNode, endIndex);
                 }
                 setSuffixLink(prevParentNode, parentNode);
                 active.EndIndex++;
